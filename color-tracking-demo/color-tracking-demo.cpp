@@ -3,8 +3,149 @@
 #include <iostream>
 #include <cstdlib>
 #include <set>
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
+#include <vector>
+#include <deque>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/video/video.hpp>
+
+// class to track objects with
+class CTracker
+{
+public:
+  typedef std::vector<int> tObjects;
+  typedef cv::Point3i tPosition;
+  typedef std::deque<tPosition> tPositions;
+  typedef std::map<int, tPositions> tObjectPositions;
+
+  CTracker();
+  virtual ~CTracker();
+
+  void setSize(const size_t size);
+  void setObject(const int index, const tPosition& position);
+
+  const size_t getSize() const;
+  const tObjects getObjects() const;
+  const tPosition getObjectPosition(const int index) const;
+
+  const tPosition getLastKnownObjectPosition(const int index, int& where) const;
+
+private:
+  void resizeObjects();
+
+  tObjectPositions positions_;
+  size_t size_;
+
+};
+
+CTracker::CTracker()
+ : size_(10)
+{}
+
+CTracker::~CTracker()
+{}
+
+void
+CTracker::setObject(const int index, const tPosition& position)
+{
+  positions_[index].push_back(position);
+  if (positions_[index].size() > size_)
+  {
+    positions_[index].pop_front();
+  }
+
+  for (tObjectPositions::const_iterator itrPositions = positions_.begin()
+                                      ; itrPositions != positions_.end()
+                                      ; ++itrPositions)
+  {
+    std::cout << itrPositions->first << " :";
+    for (tPositions::const_iterator itrPosition = itrPositions->second.begin()
+                                  ; itrPosition != itrPositions->second.end()
+                                  ; ++itrPosition)
+    {
+      std::cout << " " << *itrPosition;
+    }
+    std::cout << std::endl;
+  }
+}
+
+void
+CTracker::setSize(const size_t size)
+{
+  size_ = size;
+  this->resizeObjects();
+}
+
+const CTracker::tObjects
+CTracker::getObjects() const
+{
+  tObjects objects;
+  for (tObjectPositions::const_iterator itr = positions_.begin()
+                                      ; itr != positions_.end()
+                                      ; ++itr)
+  {
+    objects.push_back(itr->first);
+  }
+  return objects;
+}
+
+const CTracker::tPosition
+CTracker::getObjectPosition(const int index) const
+{
+  tPosition position(-1, -1, -1);
+  const tObjectPositions::const_iterator itr = positions_.find(index);
+  if (itr != positions_.end())
+  {
+    position = itr->second.back();
+  }
+  return position;
+}
+
+const CTracker::tPosition
+CTracker::getLastKnownObjectPosition(const int index, int& where) const
+{
+  where = -1;
+  tPosition position(-1, -1, -1);
+  const tObjectPositions::const_iterator itr = positions_.find(index);
+  if (itr != positions_.end())
+  {
+    for (int i = itr->second.size() - 1; i > 0 ; --i)
+    {
+      const tPosition& lastKnownPosition = itr->second.at(i);
+      if (lastKnownPosition.x == -1 &&
+          lastKnownPosition.y == -1 &&
+          lastKnownPosition.z == -1)
+      {
+        // position invalid
+      }
+      else
+      {
+        // position valid
+        position = lastKnownPosition;
+        where = itr->second.size() - i - 1;
+      }
+    }
+  }
+  else
+  {
+    std::cerr << "CTracker::getLastKnownObjectPosition() requested index " << index << " does not exist" << std::endl;
+  }
+  return position;
+}
+
+void
+CTracker::resizeObjects()
+{
+  for (tObjectPositions::iterator itr = positions_.begin()
+                                ; itr != positions_.end()
+                                ; ++itr)
+  {
+    while (itr->second.size() > size_)
+    {
+      itr->second.pop_front();
+    }
+  }
+}
 
 // HSV high/low ranges struct
 class CHSVRanges
@@ -156,8 +297,8 @@ main(int argc, char** argv)
   const std::string sInputWindow("Input");
   CClickedPoint InputWindowClickedPoint;
   createWindow(sInputWindow, &InputWindowClickedPoint);
-  const std::string sInputWindowHSV("Input HSV");
-  createWindow(sInputWindowHSV, NULL);
+  // const std::string sInputWindowHSV("Input HSV");
+  // createWindow(sInputWindowHSV, NULL);
   // Result
   const std::string sResultWindow("Result");
   const std::string sTrackingResultWindow("Tracking");
@@ -181,6 +322,38 @@ main(int argc, char** argv)
   addTrackbar(sControlsWindow, sControlRangeS, &rangeS, maxRangeS, &ControlsWindowClickedTrackbarS);
   addTrackbar(sControlsWindow, sControlRangeV, &rangeV, maxRangeV, &ControlsWindowClickedTrackbarV);
 
+  // init Kalman filter
+  int dynamParams = 4; // ?
+  int measureParams = 2; // ?
+  cv::KalmanFilter kf1(dynamParams, measureParams);
+  cv::KalmanFilter kf2(dynamParams, measureParams);
+  // kf.transitionMatrix
+  // kf.controlMatrix
+  // kf.measurementMatrix
+
+  kf1.transitionMatrix = *(cv::Mat_<float>(4, 4) <<
+    1,0,1,0,
+    0,1,0,1,
+    0,0,1,0,
+    0,0,0,1);
+  kf2.transitionMatrix = *(cv::Mat_<float>(4, 4) <<
+    1,0,1,0,
+    0,1,0,1,
+    0,0,1,0,
+    0,0,0,1);
+
+  // init...
+  setIdentity(kf1.measurementMatrix);
+  setIdentity(kf1.processNoiseCov, cv::Scalar::all(1e-4));
+  setIdentity(kf1.measurementNoiseCov, cv::Scalar::all(1e-1));
+  setIdentity(kf1.errorCovPost, cv::Scalar::all(.1));
+  setIdentity(kf2.measurementMatrix);
+  setIdentity(kf2.processNoiseCov, cv::Scalar::all(1e-4));
+  setIdentity(kf2.measurementNoiseCov, cv::Scalar::all(1e-1));
+  setIdentity(kf2.errorCovPost, cv::Scalar::all(.1));
+
+  const int iUsePredictionIfLost = 1; // use prediction 1 time if object is lost (temporarily)
+
   if (bVideoCaptureInitialized)
   {
     // always start updating the first color
@@ -192,6 +365,12 @@ main(int argc, char** argv)
     tSelectedColor mHSVSelectedColor;
     typedef std::map<int, CHSVRanges> tSelectedRanges;
     tSelectedRanges mHSVRanges;
+    typedef std::map<int, cv::KalmanFilter> tKalmanFilters;
+    tKalmanFilters kalmanFilters;
+    typedef std::map<int, CTracker> tTrackers;
+    tTrackers trackers;
+    typedef std::map<int, int> tTrackersPredictions;
+    tTrackersPredictions trackersPredictions;
 
     // forever
     for(;;)
@@ -211,7 +390,7 @@ main(int argc, char** argv)
       // convert to HSV
       cv::Mat imgHSV;
       cv::cvtColor(frame, imgHSV, cv::COLOR_BGR2HSV);
-      cv::imshow(sInputWindowHSV, imgHSV);
+      // cv::imshow(sInputWindowHSV, imgHSV);
 
       // get clicked point color
       bool bPointHasChanged = false;
@@ -272,6 +451,58 @@ main(int argc, char** argv)
                                          ; itr != mHSVRanges.end()
                                          ; ++itr)
       {
+        // check if kalman filter is initialized
+        const tKalmanFilters::const_iterator itrKalmanFound = kalmanFilters.find(itr->first);
+        if (itrKalmanFound == kalmanFilters.end())
+        {
+          // not found; create
+          // std::cout << "creating KalmanFilter for object " << itr->first << std::endl;
+          // kalmanFilters[itr->first] = kf1;//cv::KalmanFilter(kf);
+        }
+
+        if (itr->first == 0)
+        {
+          std::cout << "using kf1" << std::endl;
+          kalmanFilters[itr->first] = kf1;
+        }
+        else
+        {
+          std::cout << "using kf2" << std::endl;
+          kalmanFilters[itr->first] = kf2;
+        }
+
+        // first predict
+        cv::Mat prediction = kalmanFilters[itr->first].predict();
+        // correct prediction so it is inside image bounds
+        if (prediction.at<float>(0) > imgTracking.cols)
+        {
+          prediction.at<float>(0) = imgTracking.cols;
+        }
+        else if (prediction.at<float>(0) < 0.0)
+        {
+          prediction.at<float>(0) = 0.0;
+        }
+        if (prediction.at<float>(1) > imgTracking.rows)
+        {
+          prediction.at<float>(1) = imgTracking.rows;
+        }
+        else if (prediction.at<float>(1) < 0.0)
+        {
+          prediction.at<float>(1) = 0.0;
+        }
+        if (iDebug > 6)
+        {
+          std::cout << "predicted object " << itr->first << " is at: x=" << prediction.at<float>(0) << ", y=" << prediction.at<float>(1) << std::endl;
+        }
+
+        cv::Point cross_v_top(prediction.at<float>(0),    std::max((float)0, prediction.at<float>(1) - 10));
+        cv::Point cross_v_bottom(prediction.at<float>(0), std::min((float)imgTracking.rows, prediction.at<float>(1) + 10));
+        cv::Point cross_h_left(std::max((float)0,                 prediction.at<float>(0) - 10), prediction.at<float>(1));
+        cv::Point cross_h_right(std::min((float)imgTracking.cols, prediction.at<float>(0) + 10), prediction.at<float>(1));
+
+        cv::line(imgTracking, cross_v_top, cross_v_bottom, cv::Scalar(0, 255, 0));
+        cv::line(imgTracking, cross_h_left, cross_h_right, cv::Scalar(0, 255, 0));
+
         cv::Mat imgThresholded;
         cv::inRange(
           imgHSV,
@@ -302,27 +533,90 @@ main(int argc, char** argv)
           CV_RETR_EXTERNAL, // retrieves only the extreme outer contours
           CV_CHAIN_APPROX_SIMPLE);
 
+        bool bObjectFound = false;
         if (contours.size() > 0)
         // for (tContours::const_iterator itrContours = contours.begin()
         //                              ; itrContours != contours.end()
         //                              ; ++itrContours)
         {
-          const cv::Rect obj = boundingRect(*(contours.end()-1)); // largest contour is at end
-          if (iDebug > 6)
+          // idea: use area as z-axis parameter indicator
+          const double area = cv::contourArea(*(contours.end()-1));
+          // object may not be too small nor too big
+          if (area > 500 && area < 5000) // todo: make configurable
           {
-            std::cout << "object is at: x=" << obj.x + obj.width / 2 << ", y=" << obj.y + obj.height / 2 << std::endl;
+            bObjectFound = true;
           }
 
-          // draw rectangle around contour in the same color as the selected color
-          cv::Mat hsv(1, 1, imgTracking.type(), cv::Scalar(mHSVSelectedColor[itr->first][0], mHSVSelectedColor[itr->first][1], mHSVSelectedColor[itr->first][2]));
-          cv::Mat bgr;
-          cv::cvtColor(hsv, bgr, cv::COLOR_HSV2BGR);
-          const cv::Vec3b colorVec = bgr.at<cv::Vec3b>(0, 0);
-          const cv::Scalar rectColor(colorVec[0], colorVec[1], colorVec[2]);
-          cv::line(imgTracking, cv::Point(obj.x, obj.y), cv::Point(obj.x, obj.y+obj.height), rectColor);
-          cv::line(imgTracking, cv::Point(obj.x, obj.y), cv::Point(obj.x+obj.width, obj.y), rectColor);
-          cv::line(imgTracking, cv::Point(obj.x+obj.width, obj.y+obj.height), cv::Point(obj.x+obj.width, obj.y), rectColor);
-          cv::line(imgTracking, cv::Point(obj.x+obj.width, obj.y+obj.height), cv::Point(obj.x, obj.y+obj.height), rectColor);
+          if (bObjectFound == true)
+          {
+            trackersPredictions[itr->first] = 0;
+            const cv::Rect obj = boundingRect(*(contours.end()-1)); // largest contour is at end
+            if (iDebug > 6)
+            {
+              std::cout << "object " << itr->first << " is at: x=" << obj.x + obj.width / 2 << ", y=" << obj.y + obj.height / 2 << " area=" << area << std::endl;
+            }
+
+            const int obj_center_x = obj.x + obj.width / 2;
+            const int obj_center_y = obj.y + obj.height / 2;
+
+            cv::Mat measurement(2, 1, CV_32F);
+            measurement.at<float>(0, 0) = obj_center_x;
+            measurement.at<float>(0, 1) = obj_center_y;
+
+            // correct
+            cv::Mat estimated = kalmanFilters[itr->first].correct(measurement);
+            estimated.at<float>(0); // x
+            estimated.at<float>(1); // y
+
+            if (iDebug > 6)
+            {
+              std::cout << "object " << itr->first << " estimated is at: x=" << estimated.at<float>(0) << ", y=" << estimated.at<float>(1) << std::endl;
+            }
+
+            const CTracker::tPosition position(estimated.at<float>(0), estimated.at<float>(1), -1);
+            trackers[itr->first].setObject(0, position);
+
+            cv::Point cross_v_top(estimated.at<float>(0),    std::max((float)0, estimated.at<float>(1) - 10));
+            cv::Point cross_v_bottom(estimated.at<float>(0), std::min((float)imgTracking.rows, estimated.at<float>(1) + 10));
+            cv::Point cross_h_left(std::max((float)0,                 estimated.at<float>(0) - 10), estimated.at<float>(1));
+            cv::Point cross_h_right(std::min((float)imgTracking.cols, estimated.at<float>(0) + 10), estimated.at<float>(1));
+
+            cv::line(imgTracking, cross_v_top, cross_v_bottom, cv::Scalar(0, 0, 255));
+            cv::line(imgTracking, cross_h_left, cross_h_right, cv::Scalar(0, 0, 255));
+
+            // draw rectangle around contour in the same color as the selected color
+            cv::Mat hsv(1, 1, imgTracking.type(), cv::Scalar(mHSVSelectedColor[itr->first][0], mHSVSelectedColor[itr->first][1], mHSVSelectedColor[itr->first][2]));
+            cv::Mat bgr;
+            cv::cvtColor(hsv, bgr, cv::COLOR_HSV2BGR);
+            const cv::Vec3b colorVec = bgr.at<cv::Vec3b>(0, 0);
+            const cv::Scalar rectColor(colorVec[0], colorVec[1], colorVec[2]);
+            cv::line(imgTracking, cv::Point(obj.x, obj.y), cv::Point(obj.x, obj.y+obj.height), rectColor);
+            cv::line(imgTracking, cv::Point(obj.x, obj.y), cv::Point(obj.x+obj.width, obj.y), rectColor);
+            cv::line(imgTracking, cv::Point(obj.x+obj.width, obj.y+obj.height), cv::Point(obj.x+obj.width, obj.y), rectColor);
+            cv::line(imgTracking, cv::Point(obj.x+obj.width, obj.y+obj.height), cv::Point(obj.x, obj.y+obj.height), rectColor);
+          }
+          else
+          {
+            if (iDebug > 3)
+            {
+              std::cout << "no object found! too small or too big object!" << std::endl;
+            }
+            if (trackersPredictions[itr->first] < iUsePredictionIfLost)
+            {
+              trackersPredictions[itr->first]++;
+              if (iDebug > 3)
+              {
+                std::cout << "using latest prediction for object " << itr->first << std::endl;
+              }
+              const CTracker::tPosition position(prediction.at<float>(0), prediction.at<float>(1), -1);
+              trackers[itr->first].setObject(0, position);
+            }
+            else
+            {
+              const CTracker::tPosition position(-1, -1, -1);
+              trackers[itr->first].setObject(0, position);
+            }
+          }
         }
         else
         {
@@ -330,10 +624,22 @@ main(int argc, char** argv)
           {
             std::cout << "no object found!" << std::endl;
           }
+          if (trackersPredictions[itr->first] < iUsePredictionIfLost)
+          {
+            trackersPredictions[itr->first]++;
+            if (iDebug > 3)
+            {
+              std::cout << "using latest prediction for object " << itr->first << std::endl;
+            }
+            const CTracker::tPosition position(prediction.at<float>(0), prediction.at<float>(1), -1);
+            trackers[itr->first].setObject(0, position);
+          }
+          else
+          {
+            const CTracker::tPosition position(-1, -1, -1);
+            trackers[itr->first].setObject(0, position);
+          }
         }
-
-        // show object detection in tracking window
-        cv::imshow(sTrackingResultWindow, imgTracking);
 
         if (iDebug > 0)
         {
@@ -356,6 +662,9 @@ main(int argc, char** argv)
           cv::imshow(sWindowName, imgThresholded);
         }
       }
+
+      // show object detection in tracking window
+      cv::imshow(sTrackingResultWindow, imgTracking);
 
       // give imshow some time to show the result
       // so have a 1 ms delay

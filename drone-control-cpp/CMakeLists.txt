@@ -11,12 +11,17 @@ set(${PROJECT_NAME}_VERSION_PATCH_0)
 #SET(OpenCV_DIR ~/code/opencv/build)
 
 find_package( OpenCV REQUIRED )
+find_package( Boost 1.42.0 REQUIRED system thread)
+
+INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
+
+file(GLOB_RECURSE drone-control_SOURCES "src/*.cpp")
+
+add_executable( drone-control ${drone-control_SOURCES} )
+
+target_link_libraries( drone-control ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-
-add_executable( drone-control src/drone-control.cpp )
-
-target_link_libraries( drone-control ${OpenCV_LIBS} )
 
 install(
   TARGETS ${PROJECT_NAME}

@@ -32,10 +32,13 @@ COptiTrackDataCollector::getSample() const
 double
 COptiTrackDataCollector::getSampleRate() const
 {
-  return 0.0;
+  std::cout << "COptiTrackDataCollector::getSampleRate()" << std::endl;
+  return dSampleRate_;
 }
 
 void
 COptiTrackDataCollector::setSampleRate(const double dSampleRate)
 {
+  std::cout << "COptiTrackDataCollector::setSampleRate( " << dSampleRate << " )" << std::endl;
+  dSampleRate_ = dSampleRate;
 }

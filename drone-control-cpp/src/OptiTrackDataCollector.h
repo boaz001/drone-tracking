@@ -25,6 +25,8 @@ public:
   // @brief
   virtual void setSampleRate(const double dSampleRate);
 
+private:
+  double dSampleRate_;
 };
 
 #endif

@@ -5,9 +5,6 @@
 #define SYNCHRONIZER_H
 
 #include <boost/thread.hpp>
-#include <boost/asio.hpp>
-#include <boost/bind.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 // forward declaration
 class IDataCollector;
@@ -30,19 +27,27 @@ public:
   void stop();
   // @brief
   void registerDataCollector(IDataCollector* const dataCollector);
+  // @brief
+  void setSampleRate(const double dSampleRate);
 
 private:
   // @brief
   void run();
 
-  boost::thread internalThread_;
+  // private data members
+  boost::thread thread_;
 
-  boost::mutex mtxStopped_;
+  // @brief is synchronizer timer running?
   bool bStopped_;
-
-  boost::mutex mtxDataCollectors_;
+  // @brief registered DataCollectors
   typedef std::set<IDataCollector* const> tDataCollectors;
   tDataCollectors dataCollectors_;
+  // @brief sample rate
+  double dSampleRate_;
+
+  // mutexes to guard private data members thread-safe
+  boost::mutex mtxStopped_;
+  boost::mutex mtxDataCollectors_;
 };
 
 #endif

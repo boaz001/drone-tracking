@@ -38,7 +38,8 @@ CReferenceDataCollector::getSample() const
 double
 CReferenceDataCollector::getSampleRate() const
 {
-  return 0.0;
+  std::cout << "CReferenceDataCollector::getSampleRate()" << std::endl;
+  return dSampleRate_;
 }
 
 /**
@@ -47,4 +48,6 @@ CReferenceDataCollector::getSampleRate() const
 void
 CReferenceDataCollector::setSampleRate(const double dSampleRate)
 {
+  std::cout << "CReferenceDataCollector::setSampleRate( " << dSampleRate << " )" << std::endl;
+  dSampleRate_ = dSampleRate;
 }

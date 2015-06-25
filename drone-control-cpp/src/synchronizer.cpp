@@ -6,8 +6,6 @@
 #include "dataCollector.h"
 #include "sample.h"
 
-#include <unistd.h> // sleep()
-
 /**
  * @brief Constructor
  */
@@ -15,7 +13,7 @@ CSynchronizer::CSynchronizer()
  : bStopped_(true)
 {
   std::cout << "CSynchronizer::CSynchronizer()" << std::endl;
-  internalThread_ = boost::thread(&CSynchronizer::run, this);
+  thread_ = boost::thread(&CSynchronizer::run, this);
 }
 
 /**
@@ -24,8 +22,8 @@ CSynchronizer::CSynchronizer()
 CSynchronizer::~CSynchronizer()
 {
   std::cout << "CSynchronizer::~CSynchronizer()" << std::endl;
-  internalThread_.interrupt();
-  internalThread_.join();
+  thread_.interrupt();
+  thread_.join();
 }
 
 /**
@@ -36,19 +34,19 @@ CSynchronizer::run()
 {
   std::cout << "CSynchronizer::run()" << std::endl;
 
+  // try/catch for exception safety
   try
   {
-    /* add whatever code you want the thread to execute here. */
     start();
   }
   catch (boost::thread_interrupted& interruption)
   {
-    // thread was interrupted, this is expected.
+    std::cout << "CSynchronizer::run() thread interrupted" << std::endl;
     stop();
   }
   catch (std::exception& e)
   {
-    // an unhandled exception reached this point, this constitutes an error
+    std::cout << "CSynchronizer::run() caught exception" << std::endl;
     stop();
   }
 }
@@ -72,22 +70,19 @@ CSynchronizer::start()
   std::cout << "CSynchronizer::start()" << std::endl;
   if (isStopped())
   {
-    mtxStopped_.lock();
-    bStopped_ = false;
-    mtxStopped_.unlock();
+    { // scoped guard
+      boost::lock_guard<boost::mutex> guard(mtxStopped_);
+      bStopped_ = false;
+    }
+
     boost::posix_time::ptime t1(boost::posix_time::microsec_clock::local_time());
 
     while (isStopped() == false)
     {
-      usleep(1000000); // sleep 1 sec
+      boost::this_thread::sleep_for(boost::chrono::milliseconds(static_cast<int>(1000.0/dSampleRate_)));
 
-      if (dataCollectors_.size() == 0)
-      {
-        std::cout << "no registered DataCollector" << std::endl;
-      }
-
-      boost::posix_time::ptime t2(boost::posix_time::microsec_clock::local_time());
-      boost::posix_time::time_duration td = t2 - t1;
+      const boost::posix_time::ptime t2(boost::posix_time::microsec_clock::local_time());
+      const boost::posix_time::time_duration td = t2 - t1;
       t1 = t2;
 
       // print elapsed milli seconds
@@ -124,4 +119,29 @@ CSynchronizer::registerDataCollector(IDataCollector* const dataCollector)
   std::cout << "CSynchronizer::registerDataCollector( " << (void*)dataCollector << " )" << std::endl;
   boost::lock_guard<boost::mutex> guard(mtxDataCollectors_);
   dataCollectors_.insert(dataCollector);
+}
+
+/**
+ * @brief setSampleRate
+ */
+void
+CSynchronizer::setSampleRate(const double dSampleRate)
+{
+  std::cout << "CSynchronizer::setSampleRate( " << dSampleRate << " )" << std::endl;
+  const bool bIsRunning = !isStopped();
+  if (bIsRunning)
+  {
+    stop();
+  }
+  dSampleRate_ = dSampleRate;
+  for (tDataCollectors::const_iterator itr = dataCollectors_.begin()
+                                     ; itr != dataCollectors_.end()
+                                     ; itr++)
+  {
+    (*itr)->setSampleRate(dSampleRate);
+  }
+  if (bIsRunning)
+  {
+    start();
+  }
 }

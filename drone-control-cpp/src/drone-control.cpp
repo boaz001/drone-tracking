@@ -26,10 +26,11 @@ main(int argc, char** argv)
   CSynchronizer synchronizer;
   synchronizer.registerDataCollector(&OptiTrackDC);
   synchronizer.registerDataCollector(&ReferenceDC);
+  synchronizer.setSampleRate(1.002);
 
   // run the app for a while
   std::cout << "going to sleep..." << std::endl;
-  usleep(5000000);
+  usleep(10000000);
   std::cout << "awake!" << std::endl;
 
   // stop the synchronizer before closing the application

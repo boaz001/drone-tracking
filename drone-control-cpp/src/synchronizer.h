@@ -23,6 +23,8 @@ public:
   virtual ~CSynchronizer();
 
   // @brief
+  bool isStopped();
+  // @brief
   void start();
   // @brief
   void stop();
@@ -31,13 +33,19 @@ public:
   // @brief
   void onTimer();
   // @brief
-  void service();
+  void thread();
 
 private:
-  boost::thread thread_;
+  boost::mutex mtxStopped_;
+  bool bStopped_;
 
-  boost::asio::io_service io_svc_;
-  boost::asio::deadline_timer timer_;
+  boost::mutex mtxDataCollectors_;
+  typedef std::set<IDataCollector* const> tDataCollectors;
+  tDataCollectors dataCollectors_;
+  // boost::thread thread_;
+
+  // boost::asio::io_service io_svc_;
+  // boost::asio::deadline_timer timer_;
 
   // list of all registered dataCollectors
 };

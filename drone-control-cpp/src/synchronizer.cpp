@@ -13,13 +13,9 @@
  */
 CSynchronizer::CSynchronizer()
  : bStopped_(true)
- // : thread_()
- // , io_svc_()
- // , timer_(io_svc_, boost::posix_time::seconds(3))
 {
   std::cout << "CSynchronizer::CSynchronizer()" << std::endl;
-  // timer_.async_wait(&onTimer);
-  // io_svc_.run();
+  internalThread_ = boost::thread(&CSynchronizer::run, this);
 }
 
 /**
@@ -28,29 +24,33 @@ CSynchronizer::CSynchronizer()
 CSynchronizer::~CSynchronizer()
 {
   std::cout << "CSynchronizer::~CSynchronizer()" << std::endl;
+  internalThread_.interrupt();
+  internalThread_.join();
 }
 
 /**
- * @brief onTimer
+ * @brief run
  */
 void
-CSynchronizer::onTimer()//const boost::system::error_code& e)
+CSynchronizer::run()
 {
-  std::cout << "CSynchronizer::onTimer()" << std::endl;
-}
+  std::cout << "CSynchronizer::run()" << std::endl;
 
-/**
- * @brief thread
- */
-void
-CSynchronizer::thread()
-{
-  std::cout << "CSynchronizer::thread()" << std::endl;
-
-  // boost::asio::io_service io_svc;
-  // boost::asio::deadline_timer timer(io_svc, boost::posix_time::seconds(2));
-  // timer.async_wait(boost::bind(&CSynchronizer::onTimer, this));
-  // io_svc.run();
+  try
+  {
+    /* add whatever code you want the thread to execute here. */
+    start();
+  }
+  catch (boost::thread_interrupted& interruption)
+  {
+    // thread was interrupted, this is expected.
+    stop();
+  }
+  catch (std::exception& e)
+  {
+    // an unhandled exception reached this point, this constitutes an error
+    stop();
+  }
 }
 
 /**
@@ -102,16 +102,6 @@ CSynchronizer::start()
       }
     }
   }
-
-  // std::cout << "creating thread" << std::endl;
-  // while (true)
-  // {
-  //   boost::thread thread(boost::thread(&CSynchronizer::thread, this));
-  //   std::cout << "thread with id: " << thread.get_id() << " created" << std::endl;
-  //   thread.join();
-  // }
-  // boost::thread thread_ = boost::thread(&CSynchronizer::thread, this);
-  // thread_.join();
 }
 
 /**

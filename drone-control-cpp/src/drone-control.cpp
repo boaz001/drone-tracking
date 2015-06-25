@@ -1,22 +1,9 @@
 // drone-control.cpp
 
 #include <iostream>
-#include "drone.h"
 #include "synchronizer.h"
 #include "OptiTrackDataCollector.h"
-
-CSynchronizer* pSynchronizer = NULL;
-
-// thread to run the synchronizer in
-void
-synchronizer_thread()
-{
-  std::cout << "synchronizer_thread" << std::endl;
-  if (pSynchronizer)
-  {
-    pSynchronizer->start();
-  }
-}
+#include "referenceDataCollector.h"
 
 // main entry point
 int
@@ -28,46 +15,25 @@ main(int argc, char** argv)
   {
     iDebug = std::atoi(argv[1]);
   }
-
-  if (pSynchronizer == NULL)
-  {
-    pSynchronizer = new CSynchronizer();
-  }
-  COptiTrackDataCollector OptiTrackDC;
-  pSynchronizer->registerDataCollector(&OptiTrackDC);
-
-  boost::thread thread_sync(&synchronizer_thread);
-  std::cout << "synchronizer_thread with id: " << thread_sync.get_id() << " created" << std::endl;
-  std::cout << "joining sync thread" << std::endl;
-  thread_sync.join();
-
-  // usleep(10000);
-
-  // CSynchronizer synchronizer;
-
-  // boost::thread main_thread(&print2);
-  // std::cout << "main_thread with id: " << main_thread.get_id() << " created" << std::endl;
-  // main_thread.join();
-
-  std::cout << "start()" << std::endl;
-  // synchronizer.start();
-
-
-  // boost::asio::io_service io;
-  // boost::asio::deadline_timer t(io, boost::posix_time::seconds(5));
-  // t.async_wait(&print);
-  // io.run();
-  std::cout << "done" << std::endl;
-
   if (iDebug > 0)
   {
     std::cout << "debug level set to: " << iDebug << std::endl;
   }
 
-  if (pSynchronizer)
-  {
-    delete pSynchronizer;
-  }
+  // application components
+  COptiTrackDataCollector OptiTrackDC;
+  CReferenceDataCollector ReferenceDC;
+  CSynchronizer synchronizer;
+  synchronizer.registerDataCollector(&OptiTrackDC);
+  synchronizer.registerDataCollector(&ReferenceDC);
+
+  // run the app for a while
+  std::cout << "going to sleep..." << std::endl;
+  usleep(5000000);
+  std::cout << "awake!" << std::endl;
+
+  // stop the synchronizer before closing the application
+  synchronizer.stop();
 
   return EXIT_SUCCESS;
 }

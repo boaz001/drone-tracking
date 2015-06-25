@@ -30,24 +30,19 @@ public:
   void stop();
   // @brief
   void registerDataCollector(IDataCollector* const dataCollector);
-  // @brief
-  void onTimer();
-  // @brief
-  void thread();
 
 private:
+  // @brief
+  void run();
+
+  boost::thread internalThread_;
+
   boost::mutex mtxStopped_;
   bool bStopped_;
 
   boost::mutex mtxDataCollectors_;
   typedef std::set<IDataCollector* const> tDataCollectors;
   tDataCollectors dataCollectors_;
-  // boost::thread thread_;
-
-  // boost::asio::io_service io_svc_;
-  // boost::asio::deadline_timer timer_;
-
-  // list of all registered dataCollectors
 };
 
 #endif

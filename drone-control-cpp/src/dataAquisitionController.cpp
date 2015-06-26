@@ -24,8 +24,6 @@ CDataAquisitionController::CDataAquisitionController()
 CDataAquisitionController::~CDataAquisitionController()
 {
   std::cout << "CDataAquisitionController::~CDataAquisitionController()" << std::endl;
-  // stop synchronizer
-  synchronizer.stop();
 }
 
 /**
@@ -35,7 +33,6 @@ void
 CDataAquisitionController::start()
 {
   std::cout << "CDataAquisitionController::start()" << std::endl;
-  synchronizer.start();
 }
 
 /**
@@ -45,7 +42,6 @@ void
 CDataAquisitionController::stop()
 {
   std::cout << "CDataAquisitionController::stop()" << std::endl;
-  synchronizer.stop();
 }
 
 /**

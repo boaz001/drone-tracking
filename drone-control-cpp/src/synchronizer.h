@@ -21,25 +21,26 @@ public:
   virtual ~CSynchronizer();
 
   // @brief
-  bool isStopped();
-  // @brief
-  void start();
-  // @brief
-  void stop();
-  // @brief
   void registerDataCollector(IDataCollector* const dataCollector);
   // @brief
   void setSampleRate(const double dSampleRate);
+  // @brief
+  void setPaused(const bool bPaused_);
 
 private:
   // @brief
   void run();
+  // @brief
+  void stop();
 
   // private data members
+  // @brief the thread the synchronizer runs in
   boost::thread thread_;
 
-  // @brief is synchronizer timer running?
-  bool bStopped_;
+  // @brief is synchronizer pauzed?
+  bool bPaused_;
+  // @brief stop the synchronizer (will return from the thread)
+  bool bStop_;
   // @brief registered DataCollectors
   typedef std::set<IDataCollector* const> tDataCollectors;
   tDataCollectors dataCollectors_;
@@ -47,7 +48,9 @@ private:
   double dSampleRate_;
 
   // mutexes to guard private data members thread-safe
-  boost::mutex mtxStopped_;
+  boost::condition_variable varPauseChanged_;
+  boost::mutex mtxStop_;
+  boost::mutex mtxPause_;
   boost::mutex mtxDataCollectors_;
 };
 

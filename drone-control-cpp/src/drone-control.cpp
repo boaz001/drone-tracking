@@ -42,8 +42,27 @@ main(int argc, char** argv)
 #endif
   std::cout << "awake!" << std::endl;
 
-  // stop the synchronizer before closing the application
-  synchronizer.stop();
+  synchronizer.setPaused(true);
+
+  std::cout << "going to sleep..." << std::endl;
+#ifdef _WIN32
+   Sleep(10000);
+#else
+  usleep(10000000);
+#endif
+  std::cout << "awake!" << std::endl;
+
+  synchronizer.setPaused(false);
+
+  std::cout << "going to sleep..." << std::endl;
+#ifdef _WIN32
+   Sleep(10000);
+#else
+  usleep(10000000);
+#endif
+  std::cout << "awake!" << std::endl;
+
+  // close the application
 
   return EXIT_SUCCESS;
 }

@@ -1,9 +1,14 @@
 // drone-control.cpp
 
-#include <iostream>
 #include "synchronizer.h"
 #include "OptiTrackDataCollector.h"
 #include "referenceDataCollector.h"
+#include <iostream>
+#ifdef _WIN32
+#include <Windows.h> // Sleep((ms)
+#else
+#include <unistd.h> // sleep(us)
+#endif
 
 // main entry point
 int
@@ -30,7 +35,11 @@ main(int argc, char** argv)
 
   // run the app for a while
   std::cout << "going to sleep..." << std::endl;
+#ifdef _WIN32
+   Sleep(10000);
+#else
   usleep(10000000);
+#endif
   std::cout << "awake!" << std::endl;
 
   // stop the synchronizer before closing the application

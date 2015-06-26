@@ -5,6 +5,7 @@
 #define SYNCHRONIZER_H
 
 #include <boost/thread.hpp>
+#include <set>
 
 // forward declaration
 class IDataCollector;

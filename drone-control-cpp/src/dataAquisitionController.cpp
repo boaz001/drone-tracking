@@ -3,6 +3,7 @@
  */
 
 #include "dataAquisitionController.h"
+#include <iostream>
 
 /**
  * @brief Constructor

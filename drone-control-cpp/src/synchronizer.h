@@ -42,7 +42,7 @@ private:
   // @brief stop the synchronizer (will return from the thread)
   bool bStop_;
   // @brief registered DataCollectors
-  typedef std::set<IDataCollector* const> tDataCollectors;
+  typedef std::set<IDataCollector*> tDataCollectors;
   tDataCollectors dataCollectors_;
   // @brief sample rate
   double dSampleRate_;

@@ -5,6 +5,9 @@
 #include "synchronizer.h"
 #include "dataCollector.h"
 #include "sample.h"
+#include <iostream>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/thread/thread.hpp> 
 
 /**
  * @brief Constructor
@@ -79,7 +82,7 @@ CSynchronizer::start()
 
     while (isStopped() == false)
     {
-      boost::this_thread::sleep_for(boost::chrono::milliseconds(static_cast<int>(1000.0/dSampleRate_)));
+      boost::this_thread::sleep(boost::posix_time::milliseconds(static_cast<int>(1000.0/dSampleRate_)));
 
       const boost::posix_time::ptime t2(boost::posix_time::microsec_clock::local_time());
       const boost::posix_time::time_duration td = t2 - t1;

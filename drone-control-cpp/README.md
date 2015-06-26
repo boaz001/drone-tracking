@@ -7,6 +7,7 @@ Outer control loop of the drones
     git
     CMake >= 2.8
     OpenCV >= 2.4
+    boost >= 1.39
 
 ## Install
 Build the drone-control demo

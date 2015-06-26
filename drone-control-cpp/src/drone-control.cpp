@@ -1,8 +1,6 @@
 // drone-control.cpp
 
-#include "synchronizer.h"
-#include "OptiTrackDataCollector.h"
-#include "referenceDataCollector.h"
+#include "dataAquisitionController.h"
 #include <iostream>
 #ifdef _WIN32
 #include <Windows.h> // Sleep((ms)
@@ -26,12 +24,8 @@ main(int argc, char** argv)
   }
 
   // application components
-  COptiTrackDataCollector OptiTrackDC;
-  CReferenceDataCollector ReferenceDC;
-  CSynchronizer synchronizer;
-  synchronizer.registerDataCollector(&OptiTrackDC);
-  synchronizer.registerDataCollector(&ReferenceDC);
-  synchronizer.setSampleRate(35.0);
+  CDataAquisitionController dataAquisitionController;
+  dataAquisitionController.setSampleRate(1.0);
 
   // run the app for a while
   std::cout << "going to sleep..." << std::endl;
@@ -42,7 +36,7 @@ main(int argc, char** argv)
 #endif
   std::cout << "awake!" << std::endl;
 
-  synchronizer.setPaused(true);
+  dataAquisitionController.setPaused(true);
 
   std::cout << "going to sleep..." << std::endl;
 #ifdef _WIN32
@@ -52,7 +46,7 @@ main(int argc, char** argv)
 #endif
   std::cout << "awake!" << std::endl;
 
-  synchronizer.setPaused(false);
+  dataAquisitionController.setPaused(false);
 
   std::cout << "going to sleep..." << std::endl;
 #ifdef _WIN32

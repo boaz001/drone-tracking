@@ -9,6 +9,7 @@
  */
 COptiTrackDataCollector::COptiTrackDataCollector()
  : IDataCollector()
+ , dSampleRate_(1.0)
 {
   std::cout << "COptiTrackDataCollector::COptiTrackDataCollector()" << std::endl;
 }

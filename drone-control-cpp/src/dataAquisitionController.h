@@ -21,21 +21,19 @@ public:
   virtual ~CDataAquisitionController();
 
   // @brief
-  void start();
-  // @brief
-  void stop();
+  void setPaused(const bool bPaused);
   // @brief
   void setSampleRate(const double dSampleRate);
 
 private:
   // private data members
   // @brief synchronizer
-  CSynchronizer synchronizer;
+  CSynchronizer synchronizer_;
 
   // @brief the DataCollectors
   // TODO: use some sort of factory/configuration method to create DataCollectors
-  COptiTrackDataCollector OptiTrackDC;
-  CReferenceDataCollector ReferenceDC;
+  COptiTrackDataCollector OptiTrackDC_;
+  CReferenceDataCollector ReferenceDC_;
 };
 
 #endif

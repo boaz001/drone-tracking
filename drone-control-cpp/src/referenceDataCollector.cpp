@@ -9,6 +9,7 @@
  */
 CReferenceDataCollector::CReferenceDataCollector()
  : IDataCollector()
+ , dSampleRate_(1.0)
 {
   std::cout << "CReferenceDataCollector::CReferenceDataCollector()" << std::endl;
 }

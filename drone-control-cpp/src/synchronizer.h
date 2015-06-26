@@ -25,7 +25,7 @@ public:
   // @brief
   void setSampleRate(const double dSampleRate);
   // @brief
-  void setPaused(const bool bPaused_);
+  void setPaused(const bool bPaused);
 
 private:
   // @brief

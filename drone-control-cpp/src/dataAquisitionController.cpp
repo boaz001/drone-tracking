@@ -9,13 +9,13 @@
  * @brief Constructor
  */
 CDataAquisitionController::CDataAquisitionController()
- : synchronizer()
- , OptiTrackDC()
- , ReferenceDC()
+ : synchronizer_()
+ , OptiTrackDC_()
+ , ReferenceDC_()
 {
   std::cout << "CDataAquisitionController::CDataAquisitionController()" << std::endl;
-  synchronizer.registerDataCollector(&OptiTrackDC);
-  synchronizer.registerDataCollector(&ReferenceDC);
+  synchronizer_.registerDataCollector(&OptiTrackDC_);
+  synchronizer_.registerDataCollector(&ReferenceDC_);
 }
 
 /**
@@ -27,21 +27,12 @@ CDataAquisitionController::~CDataAquisitionController()
 }
 
 /**
- * @brief start
+ * @brief setPaused
  */
 void
-CDataAquisitionController::start()
+CDataAquisitionController::setPaused(const bool bPaused)
 {
-  std::cout << "CDataAquisitionController::start()" << std::endl;
-}
-
-/**
- * @brief stop
- */
-void
-CDataAquisitionController::stop()
-{
-  std::cout << "CDataAquisitionController::stop()" << std::endl;
+  synchronizer_.setPaused(bPaused);
 }
 
 /**
@@ -51,5 +42,5 @@ void
 CDataAquisitionController::setSampleRate(const double dSampleRate)
 {
   std::cout << "CDataAquisitionController::setSampleRate( " << dSampleRate << " )" << std::endl;
-  synchronizer.setSampleRate(1.002);
+  synchronizer_.setSampleRate(dSampleRate);
 }

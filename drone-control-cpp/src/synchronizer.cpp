@@ -7,7 +7,9 @@
 #include "sample.h"
 #include <iostream>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/thread/thread.hpp> 
+#include <boost/thread/thread.hpp>
+#include <boost/asio/deadline_timer.hpp>
+#include <boost/asio/io_service.hpp>
 
 /**
  * @brief Constructor
@@ -75,10 +77,22 @@ CSynchronizer::run()
         }
       }
 
+      boost::posix_time::ptime t1(boost::posix_time::microsec_clock::local_time());
+
       { // else, run Forrest run!
         std::cout << "CSynchronizer::run() running..." << std::endl;
         // wait for sample period
-        boost::this_thread::sleep(boost::posix_time::milliseconds(static_cast<int>(1000.0/dSampleRate_)));
+        // boost::this_thread::sleep(boost::posix_time::milliseconds(static_cast<int>(1000.0/dSampleRate_)));
+        boost::asio::io_service io_svc;
+        boost::asio::deadline_timer timer(io_svc, boost::posix_time::milliseconds(static_cast<int>(1000.0/dSampleRate_)));
+        timer.wait();
+        io_svc.run();
+
+        const boost::posix_time::ptime t2(boost::posix_time::microsec_clock::local_time());
+        const boost::posix_time::time_duration td = t2 - t1;
+
+        // print elapsed milli seconds
+        std::cout << "msecs between calls: " << td.total_milliseconds() << std::endl;
 
         // get samples from DataCollectors
         boost::lock_guard<boost::mutex> guard(mtxDataCollectors_);
@@ -131,6 +145,7 @@ CSynchronizer::setSampleRate(const double dSampleRate)
 {
   std::cout << "CSynchronizer::setSampleRate( " << dSampleRate << " )" << std::endl;
   dSampleRate_ = dSampleRate;
+  boost::lock_guard<boost::mutex> guard(mtxDataCollectors_);
   for (tDataCollectors::const_iterator itr = dataCollectors_.begin()
                                      ; itr != dataCollectors_.end()
                                      ; itr++)

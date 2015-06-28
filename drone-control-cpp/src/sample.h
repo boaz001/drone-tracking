@@ -14,7 +14,14 @@ public:
   CSample();
   virtual ~CSample();
 
+  // @brief
+  void setIsReference(const bool bIsReference);
+  // @brief
+  bool getIsReference() const;
+  // @brief
+
 private:
+  bool bIsReference_;
 };
 
 #endif

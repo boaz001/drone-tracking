@@ -21,12 +21,12 @@ public:
   // @brief
   virtual CSample getSample() const;
   // @brief
-  virtual double getSampleRate() const;
+  virtual double getSamplePeriod() const;
   // @brief
-  virtual void setSampleRate(const double dSampleRate);
+  virtual void setSamplePeriod(const double dSamplePeriod);
 
 private:
-  double dSampleRate_;
+  double dSamplePeriod_;
 };
 
 #endif

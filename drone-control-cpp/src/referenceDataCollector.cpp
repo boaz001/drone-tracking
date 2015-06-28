@@ -9,7 +9,7 @@
  */
 CReferenceDataCollector::CReferenceDataCollector()
  : IDataCollector()
- , dSampleRate_(1.0)
+ , dSamplePeriod_(1000.0)
 {
   std::cout << "CReferenceDataCollector::CReferenceDataCollector()" << std::endl;
 }
@@ -20,6 +20,7 @@ CReferenceDataCollector::CReferenceDataCollector()
 CReferenceDataCollector::~CReferenceDataCollector()
 {
   std::cout << "CReferenceDataCollector::~CReferenceDataCollector()" << std::endl;
+  referenceFileHandle_.close();
 }
 
 /**
@@ -34,21 +35,50 @@ CReferenceDataCollector::getSample() const
 }
 
 /**
- * @brief getSampleRate
+ * @brief getSamplePeriod
  */
 double
-CReferenceDataCollector::getSampleRate() const
+CReferenceDataCollector::getSamplePeriod() const
 {
-  std::cout << "CReferenceDataCollector::getSampleRate()" << std::endl;
-  return dSampleRate_;
+  std::cout << "CReferenceDataCollector::getSamplePeriod()" << std::endl;
+  return dSamplePeriod_;
 }
 
 /**
- * @brief setSampleRate
+ * @brief setSamplePeriod
  */
 void
-CReferenceDataCollector::setSampleRate(const double dSampleRate)
+CReferenceDataCollector::setSamplePeriod(const double dSamplePeriod)
 {
-  std::cout << "CReferenceDataCollector::setSampleRate( " << dSampleRate << " )" << std::endl;
-  dSampleRate_ = dSampleRate;
+  std::cout << "CReferenceDataCollector::setSamplePeriod( " << dSamplePeriod << " )" << std::endl;
+  dSamplePeriod_ = dSamplePeriod;
+}
+
+/**
+ * @brief loadReferenceFile
+ */
+bool
+CReferenceDataCollector::loadReferenceFile(const std::string& sFilename)
+{
+  referenceFileHandle_.open(sFilename, std::ios_base::in);
+  return referenceFileHandle_.is_open();
+}
+
+/**
+ * @brief jumpTo
+ */
+bool
+CReferenceDataCollector::jumpTo(const long iPosition)
+{
+  bool bSuccess(false);
+  try
+  {
+    referenceFileHandle_.seekg(iPosition);
+    bSuccess = true;
+  }
+  catch (std::ios_base::failure& e)
+  {
+    std::cout << "CReferenceDataCollector::jumpTo() failed to jump to position " << iPosition << std::endl;
+  }
+  return bSuccess;
 }

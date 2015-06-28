@@ -6,9 +6,10 @@
 
 #include <boost/thread.hpp>
 #include <set>
+#include <deque>
 
 // forward declaration
-class IDataCollector;
+class ISynchronizedComponent;
 
 /**
  * @brief Synchronizer class
@@ -21,9 +22,12 @@ public:
   virtual ~CSynchronizer();
 
   // @brief
-  void registerDataCollector(IDataCollector* const dataCollector);
+  void registerSynchronizedComponent(ISynchronizedComponent* const synchronizedComponent);
   // @brief
-  void setSampleRate(const double dSampleRate);
+  void unregisterSynchronizedComponent(ISynchronizedComponent* const synchronizedComponent);
+
+  // @brief
+  void setSamplePeriod(const double dSamplePeriod);
   // @brief
   void setPaused(const bool bPaused);
 
@@ -41,17 +45,17 @@ private:
   bool bPaused_;
   // @brief stop the synchronizer (will return from the thread)
   bool bStop_;
-  // @brief registered DataCollectors
-  typedef std::set<IDataCollector*> tDataCollectors;
-  tDataCollectors dataCollectors_;
+  // @brief registered SynchronizedComponents
+  typedef std::set<ISynchronizedComponent*> tSynchronizedComponents;
+  tSynchronizedComponents synchronizedComponents_;
   // @brief sample rate
-  double dSampleRate_;
+  double dSamplePeriod_;
 
   // mutexes to guard private data members thread-safe
   boost::condition_variable varPauseChanged_;
   boost::mutex mtxStop_;
   boost::mutex mtxPause_;
-  boost::mutex mtxDataCollectors_;
+  boost::mutex mtxSynchronizedComponents_;
 };
 
 #endif

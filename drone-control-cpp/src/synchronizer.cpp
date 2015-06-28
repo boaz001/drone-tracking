@@ -3,11 +3,9 @@
  */
 
 #include "synchronizer.h"
-#include "dataCollector.h"
-#include "sample.h"
+#include "synchronizedComponent.h"
 #include <iostream>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/thread/thread.hpp>
 #include <boost/asio/deadline_timer.hpp>
 #include <boost/asio/io_service.hpp>
 
@@ -15,8 +13,9 @@
  * @brief Constructor
  */
 CSynchronizer::CSynchronizer()
- : bPaused_(false)
+ : bPaused_(true)
  , bStop_(false)
+ , dSamplePeriod_(1000.0)
 {
   std::cout << "CSynchronizer::CSynchronizer()" << std::endl;
   thread_ = boost::thread(&CSynchronizer::run, this);
@@ -33,17 +32,6 @@ CSynchronizer::~CSynchronizer()
   thread_.join();
 }
 
-/*
-  some timing code...
-
-boost::posix_time::ptime t1(boost::posix_time::microsec_clock::local_time());
-const boost::posix_time::ptime t2(boost::posix_time::microsec_clock::local_time());
-const boost::posix_time::time_duration td = t2 - t1;
-t1 = t2;
-// print elapsed milli seconds
-std::cout << "msecs between calls: " << td.total_milliseconds() << std::endl;
-*/
-
 /**
  * @brief run
  */
@@ -55,6 +43,10 @@ CSynchronizer::run()
   // try/catch for exception safety
   try
   {
+    // construct once outside loop
+    boost::asio::io_service io_svc;
+    boost::posix_time::ptime t1(boost::posix_time::microsec_clock::local_time());
+
     // forever run
     while (true)
     {
@@ -77,30 +69,28 @@ CSynchronizer::run()
         }
       }
 
-      boost::posix_time::ptime t1(boost::posix_time::microsec_clock::local_time());
-
       { // else, run Forrest run!
         std::cout << "CSynchronizer::run() running..." << std::endl;
-        // wait for sample period
-        // boost::this_thread::sleep(boost::posix_time::milliseconds(static_cast<int>(1000.0/dSampleRate_)));
-        boost::asio::io_service io_svc;
-        boost::asio::deadline_timer timer(io_svc, boost::posix_time::milliseconds(static_cast<int>(1000.0/dSampleRate_)));
-        timer.wait();
-        io_svc.run();
 
         const boost::posix_time::ptime t2(boost::posix_time::microsec_clock::local_time());
         const boost::posix_time::time_duration td = t2 - t1;
+        t1 = t2;
+
+        // wait for sample period
+        boost::asio::deadline_timer timer(io_svc, boost::posix_time::microseconds(1000 * dSamplePeriod_));
+        timer.wait();
+        io_svc.run();
 
         // print elapsed milli seconds
-        std::cout << "msecs between calls: " << td.total_milliseconds() << std::endl;
+        std::cout << "CSynchronizer::run() milliseconds since last call: " << static_cast<double>(td.total_microseconds()) / 1000.0 << std::endl;
 
-        // get samples from DataCollectors
-        boost::lock_guard<boost::mutex> guard(mtxDataCollectors_);
-        for (tDataCollectors::const_iterator itr = dataCollectors_.begin()
-                                           ; itr != dataCollectors_.end()
-                                           ; itr++)
+        // send tick to SynchronizedComponents
+        boost::lock_guard<boost::mutex> guard(mtxSynchronizedComponents_);
+        for (tSynchronizedComponents::const_iterator itr = synchronizedComponents_.begin()
+                                                   ; itr != synchronizedComponents_.end()
+                                                   ; itr++)
         {
-          CSample sample = (*itr)->getSample();
+          (*itr)->tick();
         }
       }
     }
@@ -127,30 +117,41 @@ CSynchronizer::stop()
 }
 
 /**
- * @brief register dataCollector
+ * @brief register synchronizedComponent
  */
 void
-CSynchronizer::registerDataCollector(IDataCollector* const dataCollector)
+CSynchronizer::registerSynchronizedComponent(ISynchronizedComponent* const synchronizedComponent)
 {
-  std::cout << "CSynchronizer::registerDataCollector( " << (void*)dataCollector << " )" << std::endl;
-  boost::lock_guard<boost::mutex> guard(mtxDataCollectors_);
-  dataCollectors_.insert(dataCollector);
+  std::cout << "CSynchronizer::registerSynchronizedComponent( " << (void*)synchronizedComponent << " )" << std::endl;
+  boost::lock_guard<boost::mutex> guard(mtxSynchronizedComponents_);
+  synchronizedComponents_.insert(synchronizedComponent);
 }
 
 /**
- * @brief setSampleRate
+ * @brief unregister synchronizedComponent
  */
 void
-CSynchronizer::setSampleRate(const double dSampleRate)
+CSynchronizer::unregisterSynchronizedComponent(ISynchronizedComponent* const synchronizedComponent)
 {
-  std::cout << "CSynchronizer::setSampleRate( " << dSampleRate << " )" << std::endl;
-  dSampleRate_ = dSampleRate;
-  boost::lock_guard<boost::mutex> guard(mtxDataCollectors_);
-  for (tDataCollectors::const_iterator itr = dataCollectors_.begin()
-                                     ; itr != dataCollectors_.end()
-                                     ; itr++)
+  std::cout << "CSynchronizer::unregisterSynchronizedComponent( " << (void*)synchronizedComponent << " )" << std::endl;
+  boost::lock_guard<boost::mutex> guard(mtxSynchronizedComponents_);
+  synchronizedComponents_.erase(synchronizedComponent);
+}
+
+/**
+ * @brief setSamplePeriod
+ */
+void
+CSynchronizer::setSamplePeriod(const double dSamplePeriod)
+{
+  std::cout << "CSynchronizer::setSamplePeriod( " << dSamplePeriod << " )" << std::endl;
+  dSamplePeriod_ = dSamplePeriod;
+  boost::lock_guard<boost::mutex> guard(mtxSynchronizedComponents_);
+  for (tSynchronizedComponents::const_iterator itr = synchronizedComponents_.begin()
+                                             ; itr != synchronizedComponents_.end()
+                                             ; itr++)
   {
-    (*itr)->setSampleRate(dSampleRate);
+    (*itr)->setSamplePeriod(dSamplePeriod);
   }
 }
 

@@ -1,6 +1,8 @@
 // drone-control.cpp
 
+#include "synchronizer.h"
 #include "dataAquisitionController.h"
+#include "droneManager.h"
 #include <iostream>
 #ifdef _WIN32
 #include <Windows.h> // Sleep((ms)
@@ -24,39 +26,45 @@ main(int argc, char** argv)
   }
 
   // application components
+  CSynchronizer synchronizer;
+  CDroneManager droneManager;
   CDataAquisitionController dataAquisitionController;
-  dataAquisitionController.setSampleRate(1.0);
+  dataAquisitionController.registerDroneManager(&droneManager);
+  synchronizer.registerSynchronizedComponent(&dataAquisitionController);
+  synchronizer.setSamplePeriod(1000.0);
+  synchronizer.setPaused(false);
 
   // run the app for a while
-  std::cout << "going to sleep..." << std::endl;
+  std::cout << "[app] going to sleep..." << std::endl;
 #ifdef _WIN32
    Sleep(10000);
 #else
   usleep(10000000);
 #endif
-  std::cout << "awake!" << std::endl;
+  std::cout << "[app] awake!" << std::endl;
 
-  dataAquisitionController.setPaused(true);
+  synchronizer.setPaused(true);
 
-  std::cout << "going to sleep..." << std::endl;
+  std::cout << "[app] going to sleep..." << std::endl;
 #ifdef _WIN32
    Sleep(10000);
 #else
   usleep(10000000);
 #endif
-  std::cout << "awake!" << std::endl;
+  std::cout << "[app] awake!" << std::endl;
 
-  dataAquisitionController.setPaused(false);
+  synchronizer.setPaused(false);
 
-  std::cout << "going to sleep..." << std::endl;
+  std::cout << "[app] going to sleep..." << std::endl;
 #ifdef _WIN32
    Sleep(10000);
 #else
   usleep(10000000);
 #endif
-  std::cout << "awake!" << std::endl;
+  std::cout << "[app] awake!" << std::endl;
 
   // close the application
+  synchronizer.unregisterSynchronizedComponent(&dataAquisitionController);
 
   return EXIT_SUCCESS;
 }

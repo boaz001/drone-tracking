@@ -4,7 +4,8 @@
 #ifndef DRONEMANAGER_H
 #define DRONEMANAGER_H
 
-#include "drone.h"
+#include "droneCollection.h"
+#include <deque>
 
 /**
  * @brief Drone Manager class
@@ -16,8 +17,21 @@ public:
   CDroneManager();
   virtual ~CDroneManager();
 
-private:
+  // @brief
+  void setSize(const size_t size);
+  // @brief
+  size_t getSize() const;
 
+  // @brief
+  void addDroneCollection(const CDroneCollection& droneCollection);
+
+  // @brief
+  void calculate();
+
+private:
+  size_t size_;
+  typedef std::deque<CDroneCollection> tDroneCollections;
+  tDroneCollections droneCollections_;
 };
 
 #endif

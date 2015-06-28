@@ -19,9 +19,9 @@ public:
   // @brief
   virtual CSample getSample() const = 0;
   // @brief
-  virtual double getSampleRate() const = 0;
+  virtual double getSamplePeriod() const = 0;
   // @brief
-  virtual void setSampleRate(const double dSampleRate) = 0;
+  virtual void setSamplePeriod(const double dSamplePeriod) = 0;
 
 };
 

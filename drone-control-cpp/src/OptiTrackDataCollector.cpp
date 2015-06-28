@@ -9,7 +9,7 @@
  */
 COptiTrackDataCollector::COptiTrackDataCollector()
  : IDataCollector()
- , dSampleRate_(1.0)
+ , dSamplePeriod_(1000.0)
 {
   std::cout << "COptiTrackDataCollector::COptiTrackDataCollector()" << std::endl;
 }
@@ -31,15 +31,15 @@ COptiTrackDataCollector::getSample() const
 }
 
 double
-COptiTrackDataCollector::getSampleRate() const
+COptiTrackDataCollector::getSamplePeriod() const
 {
-  std::cout << "COptiTrackDataCollector::getSampleRate()" << std::endl;
-  return dSampleRate_;
+  std::cout << "COptiTrackDataCollector::getSamplePeriod()" << std::endl;
+  return dSamplePeriod_;
 }
 
 void
-COptiTrackDataCollector::setSampleRate(const double dSampleRate)
+COptiTrackDataCollector::setSamplePeriod(const double dSamplePeriod)
 {
-  std::cout << "COptiTrackDataCollector::setSampleRate( " << dSampleRate << " )" << std::endl;
-  dSampleRate_ = dSampleRate;
+  std::cout << "COptiTrackDataCollector::setSamplePeriod( " << dSamplePeriod << " )" << std::endl;
+  dSamplePeriod_ = dSamplePeriod;
 }

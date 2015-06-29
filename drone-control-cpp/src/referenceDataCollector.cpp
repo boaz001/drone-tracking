@@ -60,7 +60,7 @@ CReferenceDataCollector::setSamplePeriod(const double dSamplePeriod)
 bool
 CReferenceDataCollector::loadReferenceFile(const std::string& sFilename)
 {
-  referenceFileHandle_.open(sFilename, std::ios_base::in);
+  referenceFileHandle_.open(sFilename.c_str(), std::ios_base::in);
   return referenceFileHandle_.is_open();
 }
 

@@ -8,6 +8,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/asio/deadline_timer.hpp>
 #include <boost/asio/io_service.hpp>
+// #include <boost/asio/high_resolution_timer.hpp> // not in older boost versions
 
 /**
  * @brief Constructor
@@ -76,13 +77,15 @@ CSynchronizer::run()
         const boost::posix_time::time_duration td = t2 - t1;
         t1 = t2;
 
-        // wait for sample period
-        boost::asio::deadline_timer timer(io_svc, boost::posix_time::microseconds(1000 * dSamplePeriod_));
-        timer.wait();
-        io_svc.run();
-
         // print elapsed milli seconds
         std::cout << "CSynchronizer::run() milliseconds since last call: " << static_cast<double>(td.total_microseconds()) / 1000.0 << std::endl;
+
+        // wait for sample period
+        boost::asio::deadline_timer timer(io_svc, boost::posix_time::microseconds(1000 * dSamplePeriod_));
+        // boost::asio::high_resolution_timer timer(io_svc);
+        // timer.expires_from_now(boost::posix_time::microseconds(1000 * dSamplePeriod_));
+        timer.wait();
+        io_svc.run();
 
         // send tick to SynchronizedComponents
         boost::lock_guard<boost::mutex> guard(mtxSynchronizedComponents_);

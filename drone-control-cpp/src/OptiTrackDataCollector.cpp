@@ -1,6 +1,7 @@
 /**
  * OptiTrackDataCollector.cpp
  */
+
 #include "OptiTrackDataCollector.h"
 #include <iostream>
 
@@ -22,6 +23,9 @@ COptiTrackDataCollector::~COptiTrackDataCollector()
   std::cout << "COptiTrackDataCollector::~COptiTrackDataCollector()" << std::endl;
 }
 
+/**
+ * @brief getSample
+ */
 CSample
 COptiTrackDataCollector::getSample() const
 {
@@ -30,6 +34,9 @@ COptiTrackDataCollector::getSample() const
   return sample;
 }
 
+/**
+ * @brief getSamplePeriod
+ */
 double
 COptiTrackDataCollector::getSamplePeriod() const
 {
@@ -37,6 +44,9 @@ COptiTrackDataCollector::getSamplePeriod() const
   return dSamplePeriod_;
 }
 
+/**
+ * @brief setSamplePeriod
+ */
 void
 COptiTrackDataCollector::setSamplePeriod(const double dSamplePeriod)
 {

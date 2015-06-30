@@ -5,6 +5,7 @@
 #define DRONEMANAGER_H
 
 #include "droneCollection.h"
+#include "droneCommander.h"
 #include <deque>
 
 /**
@@ -28,6 +29,9 @@ public:
   // @brief
   void calculate();
 
+  // @brief
+  void registerDroneCommander(CDroneCommander* const droneCommander);
+
 private:
   // @brief
   void resize();
@@ -35,6 +39,8 @@ private:
   size_t size_;
   typedef std::deque<CDroneCollection> tDroneCollections;
   tDroneCollections droneCollections_;
+  // @brief the registered drone commander
+  CDroneCommander* pDroneCommander_;
 };
 
 #endif

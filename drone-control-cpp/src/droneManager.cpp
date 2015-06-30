@@ -10,6 +10,7 @@
  */
 CDroneManager::CDroneManager()
  : size_(5)
+ , pDroneCommander_(NULL)
 {
   std::cout << "CDroneManager::CDroneManager()" << std::endl;
 }
@@ -20,6 +21,7 @@ CDroneManager::CDroneManager()
 CDroneManager::~CDroneManager()
 {
   std::cout << "CDroneManager::~CDroneManager()" << std::endl;
+  pDroneCommander_ = NULL;
 }
 
 /**
@@ -73,3 +75,13 @@ CDroneManager::addDroneCollection(const CDroneCollection& droneCollection)
 void
 CDroneManager::calculate()
 {}
+
+/**
+ * @brief registerDroneCommander
+ */
+void
+CDroneManager::registerDroneCommander(CDroneCommander* const droneCommander)
+{
+  std::cout << "CDataAquisitionController::registerDroneCommander( " << (void*)droneCommander << " )" << std::endl;
+  pDroneCommander_ = droneCommander;
+}

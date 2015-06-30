@@ -31,6 +31,9 @@ main(int argc, char** argv)
   CDataAquisitionController dataAquisitionController;
   dataAquisitionController.registerDroneManager(&droneManager);
   synchronizer.registerSynchronizedComponent(&dataAquisitionController);
+  CDroneCommander droneCommander;
+  droneManager.registerDroneCommander(&droneCommander);
+  synchronizer.registerSynchronizedComponent(&droneCommander);
   synchronizer.setSamplePeriod(1000.0);
   synchronizer.setPaused(false);
 
@@ -64,6 +67,7 @@ main(int argc, char** argv)
   std::cout << "[app] awake!" << std::endl;
 
   // close the application
+  synchronizer.unregisterSynchronizedComponent(&droneCommander);
   synchronizer.unregisterSynchronizedComponent(&dataAquisitionController);
 
   return EXIT_SUCCESS;

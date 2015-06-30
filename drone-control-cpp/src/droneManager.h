@@ -29,6 +29,9 @@ public:
   void calculate();
 
 private:
+  // @brief
+  void resize();
+
   size_t size_;
   typedef std::deque<CDroneCollection> tDroneCollections;
   tDroneCollections droneCollections_;

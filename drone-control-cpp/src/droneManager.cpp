@@ -29,6 +29,7 @@ void
 CDroneManager::setSize(const size_t size)
 {
   size_ = size;
+  resize();
 }
 
 /**
@@ -41,6 +42,18 @@ CDroneManager::getSize() const
 }
 
 /**
+ * @brief resize
+ */
+void
+CDroneManager::resize()
+{
+  while (droneCollections_.size() > size_)
+  {
+    droneCollections_.pop_front();
+  }
+}
+
+/**
  * @brief addDroneCollection
  */
 void
@@ -48,6 +61,10 @@ CDroneManager::addDroneCollection(const CDroneCollection& droneCollection)
 {
   std::cout << "CDroneManager::addDroneCollection()" << std::endl;
   droneCollections_.push_back(droneCollection);
+  if (droneCollections_.size() > size_)
+  {
+    droneCollections_.pop_front();
+  }
 }
 
 /**

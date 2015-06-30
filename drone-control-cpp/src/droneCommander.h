@@ -37,9 +37,9 @@ private:
 
   // @brief
   // mutexes to guard private data members thread-safe
-  bool bGetData_;
-  boost::condition_variable varGetDataChanged_;
-  boost::mutex mtxGetData_;
+  bool bSendCommand_;
+  boost::condition_variable varSendCommandChanged_;
+  boost::mutex mtxSendCommand_;
 };
 
 #endif

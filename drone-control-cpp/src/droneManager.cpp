@@ -67,6 +67,7 @@ CDroneManager::addDroneCollection(const CDroneCollection& droneCollection)
   {
     droneCollections_.pop_front();
   }
+  calculate();
 }
 
 /**
@@ -74,7 +75,9 @@ CDroneManager::addDroneCollection(const CDroneCollection& droneCollection)
  */
 void
 CDroneManager::calculate()
-{}
+{
+  std::cout << "CDroneManager::calculate()" << std::endl;
+}
 
 /**
  * @brief registerDroneCommander

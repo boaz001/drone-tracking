@@ -46,15 +46,15 @@ CDataAquisitionController::run()
     while (true)
     {
       boost::unique_lock<boost::mutex> lock(mtxGetData_);
-      while (bGetData_ == false)
+      if (bGetData_ == false)
       {
         // this wait is blocking
         std::cout << "CDataAquisitionController::run() waiting for data..." << std::endl;
         varGetDataChanged_.wait(lock);
-        bGetData_ = false;
         std::cout << "CDataAquisitionController::run() continue..." << std::endl;
+        collectData();
+        bGetData_ = false;
       }
-      collectData();
     }
   }
   catch (boost::thread_interrupted& interruption)
@@ -110,7 +110,7 @@ CDataAquisitionController::collectData()
 }
 
 /**
- * @brief collect data
+ * @brief setSamplePeriod
  */
 void
 CDataAquisitionController::setSamplePeriod(const double dSamplePeriod)

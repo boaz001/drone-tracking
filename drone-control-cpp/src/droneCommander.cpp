@@ -10,7 +10,7 @@
  */
 CDroneCommander::CDroneCommander()
  : ISynchronizedComponent()
- , bGetData_(false)
+ , bSendCommand_(false)
 {
   std::cout << "CDroneCommander::CDroneCommander()" << std::endl;
 }
@@ -36,16 +36,16 @@ CDroneCommander::run()
     // forever run
     while (true)
     {
-      boost::unique_lock<boost::mutex> lock(mtxGetData_);
-      while (bGetData_ == false)
+      boost::unique_lock<boost::mutex> lock(mtxSendCommand_);
+      if (bSendCommand_ == false)
       {
         // this wait is blocking
         std::cout << "CDroneCommander::run() waiting for data..." << std::endl;
-        varGetDataChanged_.wait(lock);
-        bGetData_ = false;
+        varSendCommandChanged_.wait(lock);
         std::cout << "CDroneCommander::run() continue..." << std::endl;
+        sendCommand();
+        bSendCommand_ = false;
       }
-      sendCommand();
     }
   }
   catch (boost::thread_interrupted& interruption)
@@ -66,10 +66,10 @@ CDroneCommander::tick()
 {
   std::cout << "CDroneCommander::tick()" << std::endl;
   {
-    boost::unique_lock<boost::mutex> lock(mtxGetData_);
-    bGetData_ = true;
+    boost::unique_lock<boost::mutex> lock(mtxSendCommand_);
+    bSendCommand_ = true;
   }
-  varGetDataChanged_.notify_all();
+  varSendCommandChanged_.notify_all();
 }
 
 /**
@@ -78,6 +78,7 @@ CDroneCommander::tick()
 void
 CDroneCommander::sendCommand()
 {
+  std::cout << "CDroneCommander::sendCommand()" << std::endl;
 }
 
 /**

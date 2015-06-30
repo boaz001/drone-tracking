@@ -40,7 +40,7 @@ main(int argc, char** argv)
   // run the app for a while
   std::cout << "[app] going to sleep..." << std::endl;
 #ifdef _WIN32
-   Sleep(10000);
+  Sleep(10000);
 #else
   usleep(10000000);
 #endif
@@ -50,7 +50,7 @@ main(int argc, char** argv)
 
   std::cout << "[app] going to sleep..." << std::endl;
 #ifdef _WIN32
-   Sleep(10000);
+  Sleep(10000);
 #else
   usleep(10000000);
 #endif
@@ -60,7 +60,7 @@ main(int argc, char** argv)
 
   std::cout << "[app] going to sleep..." << std::endl;
 #ifdef _WIN32
-   Sleep(10000);
+  Sleep(10000);
 #else
   usleep(10000000);
 #endif

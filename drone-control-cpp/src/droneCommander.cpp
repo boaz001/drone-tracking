@@ -79,6 +79,7 @@ void
 CDroneCommander::sendCommand()
 {
   std::cout << "CDroneCommander::sendCommand()" << std::endl;
+  // send Command
 }
 
 /**
@@ -87,4 +88,13 @@ CDroneCommander::sendCommand()
 void
 CDroneCommander::setSamplePeriod(const double dSamplePeriod)
 {
+}
+
+/**
+ * @brief setNextCommand
+ */
+void
+CDroneCommander::setNextCommand(const CCommand& command)
+{
+  nextCommand_ = command;
 }

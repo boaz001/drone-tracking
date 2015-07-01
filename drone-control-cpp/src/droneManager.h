@@ -6,6 +6,7 @@
 
 #include "droneCollection.h"
 #include "droneCommander.h"
+#include "calculator.h"
 #include <deque>
 
 /**
@@ -39,6 +40,10 @@ private:
   size_t size_;
   typedef std::deque<CDroneCollection> tDroneCollections;
   tDroneCollections droneCollections_;
+
+  typedef std::map<int, CCalculator> tCalculators;
+  tCalculators droneCalculators_;
+
   // @brief the registered drone commander
   CDroneCommander* pDroneCommander_;
 };

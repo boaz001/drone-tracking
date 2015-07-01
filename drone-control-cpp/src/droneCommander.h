@@ -25,6 +25,9 @@ public:
   // @brief
   virtual void setSamplePeriod(const double dSamplePeriod);
 
+  // @brief
+  void setNextCommand(const CCommand& command);
+
 private:
   // @brief
   void run();
@@ -40,6 +43,9 @@ private:
   bool bSendCommand_;
   boost::condition_variable varSendCommandChanged_;
   boost::mutex mtxSendCommand_;
+
+  // @brief
+  CCommand nextCommand_;
 };
 
 #endif

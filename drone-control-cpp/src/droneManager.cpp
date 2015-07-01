@@ -77,6 +77,11 @@ void
 CDroneManager::calculate()
 {
   std::cout << "CDroneManager::calculate()" << std::endl;
+  // for each drone
+  //   find the calculator in the map of calculator (ID based)
+  //   send the data required for the Calculator (const tDroneCollection& )
+  //   CCommand command = Calculator->calculate();
+  //   pDroneCommander_->setNextCommand(command);
 }
 
 /**

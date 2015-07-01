@@ -7,7 +7,7 @@
 #include <opencv2/video/video.hpp>
 
 /**
- * @brief Drone class
+ * @brief Calculator class
  * @details [long description]
  */
 class CCalculator
@@ -17,6 +17,15 @@ public:
   virtual ~CCalculator();
 
 private:
+  cv::Mat getAxMatrix() const;
+  cv::Mat getAyMatrix() const;
+  cv::Mat getAzMatrix() const;
+  cv::Mat getAMatrix() const;
+  cv::Mat getBxMatrix() const;
+  cv::Mat getByMatrix() const;
+  cv::Mat getBzMatrix() const;
+  cv::Mat getBMatrix() const;
+
   int id_;
   cv::KalmanFilter kf_;
 };

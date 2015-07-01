@@ -17,6 +17,8 @@ static const float h = 0.1;
 static const float tau_x = 0.2, tau_y = 0.2, tau_z = 0.2;
 static const float gain_x = 2.0, gain_y = 2.0, gain_z = 2.0;
 
+static const float tau = 30, omega = 10, zeta = 0.7;
+
 /**
  * @brief Constructor
  */
@@ -26,57 +28,22 @@ CCalculator::CCalculator(const int id)
 {
   std::cout << "CCalculator::CCalculator( " << id_ << " )" << std::endl;
 
-  const cv::Mat A_x = (cv::Mat_<float>(dynamParams_x, dynamParams_x) <<
-    0,1,0,
-    0,0,1,
-    0,0,-tau_x);
+  const cv::Mat A = getAMatrix();
+  std::cout << "A:\n " << A << std::endl;
 
-  const cv::Mat A_y = (cv::Mat_<float>(dynamParams_y, dynamParams_y) <<
-    0,1,0,
-    0,0,1,
-    0,0,-tau_y);
+  const cv::Mat B = getBMatrix();
+  std::cout << "B:\n " << B << std::endl;
 
-  const cv::Mat A_z = (cv::Mat_<float>(dynamParams_z, dynamParams_z) <<
-    0,1,0,
-    0,0,1,
-    0,0,-tau_z);
+  const cv::Mat Ax = getAxMatrix();
+  const cv::Mat Bx = getBxMatrix();
 
-  const cv::Mat A = cv::Mat::zeros(dynamParams, dynamParams, CV_32F);
-  A_x.copyTo(A(cv::Rect(0, 0, 3, 3)));
-  A_y.copyTo(A(cv::Rect(3, 3, 3, 3)));
-  A_z.copyTo(A(cv::Rect(6, 6, 3, 3)));
+  const cv::Mat identity = cv::Mat::eye(Ax.size(), Ax.type());
+  const cv::Mat psi = identity * h + (Ax * h * h) / 2 + (Ax * Ax * h * h * h) / 6;
+  const cv::Mat phi = identity + Ax * psi;
+  const cv::Mat mat_gamma = psi * Bx;
 
-  std::cout << "A:\n" << A << std::endl;
-
-  const cv::Mat B_x = (cv::Mat_<float>(dynamParams_x, 1) <<
-    0,
-    0,
-    gain_x);
-
-  const cv::Mat B_y = (cv::Mat_<float>(dynamParams_y, 1) <<
-    0,
-    0,
-    gain_y);
-
-  const cv::Mat B_z = (cv::Mat_<float>(dynamParams_z, 1) <<
-    0,
-    0,
-    gain_z);
-
-  const cv::Mat B = cv::Mat::zeros(dynamParams, 3, CV_32F);
-  B_x.copyTo(B(cv::Rect(0, 0, 1, 3)));
-  B_y.copyTo(B(cv::Rect(1, 3, 1, 3)));
-  B_z.copyTo(B(cv::Rect(2, 6, 1, 3)));
-
-  std::cout << "B:\n" << B << std::endl;
-
-  const cv::Mat identity = cv::Mat::eye(A_x.size(), A_x.type());
-  const cv::Mat psi = identity * h + (A_x * h * h) / 2 + (A_x * A_x * h * h * h) / 6;
-  const cv::Mat phi = identity + A_x * psi;
-  const cv::Mat mat_gamma = psi * B_x;
-
-  std::cout << "phi:\n" << phi << std::endl;
-  std::cout << "mat_gamma:\n" << mat_gamma << std::endl;
+  std::cout << "phi:\n " << phi << std::endl;
+  std::cout << "mat_gamma:\n " << mat_gamma << std::endl;
 
   // init Kalman filter
   // A
@@ -91,20 +58,7 @@ CCalculator::CCalculator(const int id)
     0,0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,0);
 
-  // wat anders...
-  // float omega1, omega2, zeta;
-  // float a = omega2 * zeta + omega2;
-  // float b = omega1 * omega2 + omega1;
-  // float c = omega1 * omega1 * omega2;
-
-  // cv::Mat coeffs = (cv::Mat_<float>(1, 4) << 1,a,b,c);
-  // cv::Mat roots;
-  // float p1 = cv::solvePoly(coeffs, roots);
-  // std::cout << "roots:\n" << roots << std::endl;
-
   // discrete pole creation
-  float tau = 30, omega = 10, zeta = 0.7;
-
   float omega_ster = omega * std::sqrt(1 - std::pow(zeta, 2.0));
   float beta = std::cos(omega_ster * h);
   float gamma = std::exp(-tau * h);
@@ -119,11 +73,12 @@ CCalculator::CCalculator(const int id)
 
   std::cout << "a: " << a << " b: " << b << " c: " << c << " d: " << d << std::endl;
 
+  // coeffs are in reverse order
   cv::Mat coeffs = (cv::Mat_<float>(1, 4) << d,c,b,a);
+  std::cout << "coeffs:\n " << coeffs << std::endl;
   cv::Mat roots;
-  std::cout << "coeffs:\n" << coeffs << std::endl;
   float p1 = cv::solvePoly(coeffs, roots);
-  std::cout << "p1: " << p1 << "\nroots:\n" << roots << std::endl;
+  std::cout << "p1: " << p1 << "\nroots:\n " << roots << std::endl;
 
   // init...
   // setIdentity(kf1.measurementMatrix);
@@ -142,4 +97,112 @@ CCalculator::CCalculator(const int id)
 CCalculator::~CCalculator()
 {
   std::cout << "CCalculator::~CCalculator()" << std::endl;
+}
+
+/**
+ * @brief getAMatrix
+ */
+cv::Mat
+CCalculator::getAMatrix() const
+{
+  const cv::Mat Ax = getAxMatrix();
+  const cv::Mat Ay = getAyMatrix();
+  const cv::Mat Az = getAzMatrix();
+
+  const cv::Mat A = cv::Mat::zeros(dynamParams, dynamParams, CV_32F);
+  Ax.copyTo(A(cv::Rect(dynamParams / 3 * 0, dynamParams / 3 * 0, Ax.cols, Ax.rows)));
+  Ay.copyTo(A(cv::Rect(dynamParams / 3 * 1, dynamParams / 3 * 1, Ay.cols, Ay.rows)));
+  Az.copyTo(A(cv::Rect(dynamParams / 3 * 2, dynamParams / 3 * 2, Az.cols, Ay.rows)));
+
+  return A;
+}
+
+/**
+ * @brief getAxMatrix
+ */
+cv::Mat
+CCalculator::getAxMatrix() const
+{
+  return (cv::Mat_<float>(dynamParams_x, dynamParams_x) <<
+    0,1,0,
+    0,0,1,
+    0,0,-tau_x);
+}
+
+/**
+ * @brief getAyMatrix
+ */
+cv::Mat
+CCalculator::getAyMatrix() const
+{
+  return (cv::Mat_<float>(dynamParams_y, dynamParams_y) <<
+    0,1,0,
+    0,0,1,
+    0,0,-tau_y);
+}
+
+/**
+ * @brief getAzMatrix
+ */
+cv::Mat
+CCalculator::getAzMatrix() const
+{
+  return (cv::Mat_<float>(dynamParams_z, dynamParams_z) <<
+    0,1,0,
+    0,0,1,
+    0,0,-tau_z);
+}
+
+/**
+ * @brief getBMatrix
+ */
+cv::Mat
+CCalculator::getBMatrix() const
+{
+  const cv::Mat Bx = getBxMatrix();
+  const cv::Mat By = getByMatrix();
+  const cv::Mat Bz = getBzMatrix();
+
+  const cv::Mat B = cv::Mat::zeros(dynamParams, 3, CV_32F);
+  Bx.copyTo(B(cv::Rect(0, dynamParams / 3 * 0, Bx.cols, Bx.rows)));
+  By.copyTo(B(cv::Rect(1, dynamParams / 3 * 1, By.cols, By.rows)));
+  Bz.copyTo(B(cv::Rect(2, dynamParams / 3 * 2, Bz.cols, Bz.rows)));
+
+  return B;
+}
+
+/**
+ * @brief getBxMatrix
+ */
+cv::Mat
+CCalculator::getBxMatrix() const
+{
+  return (cv::Mat_<float>(dynamParams_x, 1) <<
+    0,
+    0,
+    gain_x);
+}
+
+/**
+ * @brief getByMatrix
+ */
+cv::Mat
+CCalculator::getByMatrix() const
+{
+  return (cv::Mat_<float>(dynamParams_y, 1) <<
+    0,
+    0,
+    gain_y);
+}
+
+/**
+ * @brief getBzMatrix
+ */
+cv::Mat
+CCalculator::getBzMatrix() const
+{
+  return (cv::Mat_<float>(dynamParams_z, 1) <<
+    0,
+    0,
+    gain_z);
 }

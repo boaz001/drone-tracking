@@ -3,6 +3,7 @@
 #include "synchronizer.h"
 #include "dataAquisitionController.h"
 #include "droneManager.h"
+#include "calculator.h"
 #include <iostream>
 #ifdef _WIN32
 #include <Windows.h> // Sleep((ms)
@@ -24,6 +25,8 @@ main(int argc, char** argv)
   {
     std::cout << "debug level set to: " << iDebug << std::endl;
   }
+
+  CCalculator calculator(1);
 
   // application components
   CSynchronizer synchronizer;

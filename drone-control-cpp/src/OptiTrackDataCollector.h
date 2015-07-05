@@ -6,6 +6,7 @@
 
 #include "dataCollector.h"
 #include "sample.h"
+#include "NatNetClient.h"
 
 /**
  * @brief OptiTrack DataCollector class
@@ -26,7 +27,14 @@ public:
   virtual void setSamplePeriod(const double dSamplePeriod);
 
 private:
+  // @brief
+  void connect();
+  // @brief
+  void disconnect();
+
   double dSamplePeriod_;
+  NatNetClient* pNatNetClient_;
+  bool bIsConnected_;
 };
 
 #endif

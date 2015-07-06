@@ -8,6 +8,7 @@
 #include "sample.h"
 #include <string>
 #include <fstream>
+#include <fbxsdk.h>
 
 /**
  * @brief reference DataCollector class
@@ -35,6 +36,9 @@ public:
 private:
   double dSamplePeriod_;
   std::ifstream referenceFileHandle_;
+
+  FbxManager* pFbxManager_;
+  FbxScene* pFbxScene_;
 };
 
 #endif

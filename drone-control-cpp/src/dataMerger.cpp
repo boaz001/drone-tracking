@@ -41,7 +41,17 @@ CDataMerger::merge(const std::vector<CSample>& samples)
  * @brief bind
  */
 void
-CDataMerger::bind(const std::string& str, const int id)
+CDataMerger::bind(const tReferenceID& refID, const tActualID& actID)
 {
-  droneBindings_[str] = id;
+  tDroneBindings::iterator itrFound = droneBindings_.find(refID);
+  if (itrFound != droneBindings_.end())
+  {
+    // binding changed!
+    itrFound->second = actID;
+  }
+  else
+  {
+    // binding created!
+    droneBindings_.insert(std::pair<tReferenceID, tActualID>(refID, actID));
+  }
 }

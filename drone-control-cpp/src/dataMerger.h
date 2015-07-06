@@ -6,6 +6,7 @@
 
 #include "sample.h"
 #include "droneCollection.h"
+#include <map>
 
 /**
  * @brief data merger class
@@ -14,6 +15,9 @@
 class CDataMerger
 {
 public:
+  typedef int tReferenceID;
+  typedef int tActualID;
+
   CDataMerger();
   virtual ~CDataMerger();
 
@@ -21,12 +25,11 @@ public:
   CDroneCollection merge(const std::vector<CSample>& samples);
 
   // @brief
-  void bind(const std::string& str, const int id);
+  void bind(const tReferenceID& refID, const tActualID& actID);
 
 private:
   // how are reference and OptiTrack ID's bound?
-  typedef tReferenceID std::string;
-  typedef std::mat<tReferenceID, int> tDroneBindings
+  typedef std::map<tReferenceID, tActualID> tDroneBindings;
   tDroneBindings droneBindings_;
 };
 

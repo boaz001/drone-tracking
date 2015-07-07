@@ -3,7 +3,6 @@
  */
 
 #include "OptiTrackDataCollector.h"
-#include <NatNetTypes.h>
 #include <iostream>
 
 const int iConnectionType(ConnectionType_Multicast);

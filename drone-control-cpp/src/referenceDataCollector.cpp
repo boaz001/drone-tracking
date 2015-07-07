@@ -15,8 +15,8 @@ CReferenceDataCollector::CReferenceDataCollector()
  , pFbxScene_(NULL)
 {
   std::cout << "CReferenceDataCollector::CReferenceDataCollector()" << std::endl;
-  // Prepare the FBX SDK.
-  InitializeSdkObjects(pFbxManager_, pFbxScene_);
+  // Create the FBX SDK manager
+  pFbxManager_ = FbxManager::Create();
 }
 
 /**
@@ -65,7 +65,49 @@ CReferenceDataCollector::setSamplePeriod(const double dSamplePeriod)
 bool
 CReferenceDataCollector::loadReferenceFile(const std::string& sFilename)
 {
+  // Based on:
+  // http://docs.autodesk.com/FBX/2014/ENU/FBX-SDK-Documentation/index.html
   referenceFileHandle_.open(sFilename.c_str(), std::ios_base::in);
+  // Create an IOSettings object. IOSROOT is defined in Fbxiosettingspath.h.
+  FbxIOSettings* pIOSettings = FbxIOSettings::Create(lSdkManager, IOSROOT);
+  pFbxManager_->SetIOSettings(pIOSettings);
+
+  // ... Configure the FbxIOSettings object ...
+  // Import options determine what kind of data is to be imported.
+  // True is the default, but here we’ll set some to true explicitly, and others to false.
+  // (*(lSdkManager->GetIOSettings())).SetBoolProp(IMP_FBX_MATERIAL,        true);
+  // (*(lSdkManager->GetIOSettings())).SetBoolProp(IMP_FBX_TEXTURE,         true);
+  // (*(lSdkManager->GetIOSettings())).SetBoolProp(IMP_FBX_LINK,            false);
+  // (*(lSdkManager->GetIOSettings())).SetBoolProp(IMP_FBX_SHAPE,           false);
+  // (*(lSdkManager->GetIOSettings())).SetBoolProp(IMP_FBX_GOBO,            false);
+  // (*(lSdkManager->GetIOSettings())).SetBoolProp(IMP_FBX_ANIMATION,       true);
+  // (*(lSdkManager->GetIOSettings())).SetBoolProp(IMP_FBX_GLOBAL_SETTINGS, true);
+
+  // Create an importer.
+  FbxImporter* pFbxImporter = FbxImporter::Create(pFbxManager_, "");
+
+  // Declare the path and filename of the file containing the scene.
+  // In this case, we are assuming the file is in the same directory as the executable.
+  const char* lFilename = "file.fbx";
+
+  // Initialize the importer.
+  bool lImportStatus = pFbxImporter->Initialize(lFilename, -1, pFbxManager_->GetIOSettings());
+
+  if (!lImportStatus) {
+    printf("Call to FbxImporter::Initialize() failed.\n");
+    printf("Error returned: %s\n\n", pFbxImporter->GetStatus().GetErrorString());
+    exit(-1);
+  }
+
+  // Create a new scene so it can be populated by the imported file.
+  FbxScene* pScene = FbxScene::Create(pFbxManager_,"myScene");
+
+  // Import the contents of the file into the scene.
+  pFbxImporter->Import(pScene);
+
+  // The file has been imported; we can get rid of the importer.
+  pFbxImporter->Destroy();
+
   // Load the scene.
   FbxString lFilePath("");
   lResult = LoadScene(pFbxManager_, pFbxScene_, lFilePath.Buffer());

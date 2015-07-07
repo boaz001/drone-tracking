@@ -6,7 +6,9 @@
 
 #include "dataCollector.h"
 #include "sample.h"
+#include <NatNetTypes.h>
 #include <NatNetClient.h>
+#undef UNDEFINED // NatNetTypes.h does a global define that fucks up OpenCV
 
 /**
  * @brief OptiTrack DataCollector class

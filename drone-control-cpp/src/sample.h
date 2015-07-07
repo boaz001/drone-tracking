@@ -21,6 +21,8 @@ public:
   // @brief
 
 private:
+  // a sample contains at least the amount of data to construct a drone
+  // and possibly more... (data format specific settings (e.g. frame rate))
   bool bIsReference_;
 };
 

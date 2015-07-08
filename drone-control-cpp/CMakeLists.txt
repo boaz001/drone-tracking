@@ -24,17 +24,17 @@ SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
 find_package( OpenCV REQUIRED )
 find_package( Boost 1.39.0 REQUIRED system thread)
 find_package( FBX REQUIRED )
-#find_package( NatNet REQUIRED )
+find_package( NatNet REQUIRED )
 
 INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
 INCLUDE_DIRECTORIES( ${FBX_INCLUDE_DIR} )
-#INCLUDE_DIRECTORIES( ${NatNet_INCLUDE_DIRS} )
+INCLUDE_DIRECTORIES( ${NatNet_INCLUDE_DIRS} )
 
 file(GLOB_RECURSE drone-control_SOURCES "src/*.cpp")
 
 add_executable( drone-control ${drone-control_SOURCES} )
 
-target_link_libraries( drone-control ${OpenCV_LIBS} ${Boost_LIBRARIES} ${FBX_LIBRARY} ) # ${NatNet_LIBRARIES})
+target_link_libraries( drone-control ${OpenCV_LIBS} ${Boost_LIBRARIES} ${FBX_LIBRARY} ${NatNet_LIBRARIES} )
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
